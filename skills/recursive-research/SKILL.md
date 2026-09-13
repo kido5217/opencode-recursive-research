@@ -1,6 +1,6 @@
 ---
 name: recursive-research
-description: Deep recursive research to PhD level across any domain — source tiering, WDM + Munger inversion, ketch-first web research, and disk checkpointing that survives context compaction.
+description: Deep recursive research to PhD level on any topic. Use when you want to go deep on a topic to expert level, understand a new field to make informed decisions, prepare a technical document, paper, or proposal, or map the state of the art and its knowledge gaps. Runs self-regulating research cycles with source tiering, WDM + Munger inversion, and disk checkpoints that survive context compaction.
 license: MIT
 metadata:
   version: "2.2.0"
@@ -8,16 +8,9 @@ metadata:
   repository: "https://github.com/Anjos2/recursive-research"
 ---
 
-# Skill: Deep Recursive Research (v2.2.0)
+# Skill: Deep Recursive Research
 
 Self-regulated research that iterates until it reaches **PhD level** on a research seed (root topic). Works in any domain: formal sciences, natural sciences, social sciences, humanities, arts, technology, business.
-
-## When to use
-
-- You want to go deep on a topic to expert level
-- You need to understand a new field to make informed decisions
-- You are preparing a technical document, paper, proposal, or study
-- You want to identify the state of the art and the knowledge gaps
 
 ## Principles
 
@@ -34,7 +27,7 @@ Self-regulated research that iterates until it reaches **PhD level** on a resear
 
 ### Phase 0 — Initial questions (the skill asks)
 
-Invocation handling comes first: if the invocation text contains `--resume <slug>` or `--list`, handle that before anything else (see the `--resume` and `--list` sections). Do not rely on `$ARGUMENTS` substitution — read the invocation text directly for the flags.
+Invocation handling comes first: read the user's message for `--resume <slug>` or `--list` and handle that before anything else (see the `--resume` and `--list` sections).
 
 Otherwise, a bare `/recursive-research` (or an automatic trigger via the description) starts Phase 0. If `memory/research/` already holds runs, offer **resume / list / new** before asking the seed question.
 
@@ -56,11 +49,8 @@ The skill presents a summary and waits for confirmation before starting.
 1. Generate a `slug` from the seed (kebab-case, max. 40 characters)
 2. Verify / create `memory/research/<slug>/` in the current working directory
    - **If `memory/` does NOT exist, create it**, explaining: *"The `memory/` folder does not exist in the project. I am creating it because the skill needs to consolidate findings to disk each cycle — that is what lets a run resume in a new session."*
-3. Create the initial files:
-   - `state.md` — metadata, progress, metrics
-   - `threads.md` — seed-thread tree + sub-threads
-   - `sources-tier-1.md`, `sources-tier-2.md`, `sources-tier-3.md`, `sources-rejected.md`
-   - `findings.md` — consolidation
+3. Create the initial files (see §Generated files for the full layout and what each holds):
+   `state.md`, `threads.md`, `findings.md`, `sources-tier-1.md`, `sources-tier-2.md`, `sources-tier-3.md`, `sources-rejected.md`
 
 ---
 
@@ -86,15 +76,7 @@ Evaluate 5-8 candidate threads, select the top 3-5.
 
 If the inversion reveals a critically missing thread, add it and re-run WDM.
 
-**Examples by domain** (NOT code only):
-
-| Domain | Seed | Typical threads |
-|---------|---------|---------------|
-| Science | Immunotherapy against cancer | Molecular mechanisms / Clinical trials / History and evolution / Controversies and limitations / Commercial landscape |
-| Art | Minimalism in 20th-century music | Key composers / Techniques / Historical-cultural context / Criticism and reception / Landmark works |
-| Business | B2B SaaS monetization models | Pricing strategies / Financial metrics / Documented cases / Legal framework / B2B purchase psychology |
-| Humanities | Modern applied Stoic philosophy | Primary sources (Epictetus, Seneca, Aurelius) / Contemporary interpretations / Practical applications / Philosophical critiques / Empirical psychological evidence |
-| Technology | Hexagonal architecture in microservices | Theoretical foundations / Language-specific implementations / Real-world cases / Trade-offs and critiques / Tools |
+**Examples by domain**: see `reference/domains.md` (sibling to this file) for typical seed threads per domain.
 
 ---
 
@@ -115,7 +97,7 @@ Before the first cycle, detect which research capabilities the environment expos
 - **Library / framework documentation** → ketch `docs` (replacing the previous docs-MCP path).
 - **URLs already in hand** → ketch `scrape`.
 - **Multi-page sources** → ketch `crawl`, only when one page is not enough.
-- **Scrape policy** — scrape only the URLs selected as a cycle's sources (≈3-5), never every hit.
+- **Scrape policy** — scrape only the URLs selected as a cycle's sources (≈3-5).
 
 Real-browser / JS-rendering MCPs are deprioritized: use them only when the content genuinely requires explicit JS execution (SPAs without SSR, content behind auth). AI-optimized scrapers are 10-50× faster than real browsers and return already-structured text.
 
@@ -123,48 +105,7 @@ Real-browser / JS-rendering MCPs are deprioritized: use them only when the conte
 
 ### Phase 4 — Suggested seed sources
 
-The skill presents the user with a list of seed sources **pre-loaded by domain** so they can **confirm, add, or reject** them:
-
-**General science / papers**:
-- arXiv (https://arxiv.org) — preprints in physics, mathematics, CS, biology, economics
-- Semantic Scholar (https://www.semanticscholar.org) — citation network
-- Google Scholar (https://scholar.google.com)
-- Connected Papers (https://www.connectedpapers.com) — visual citation maps
-- OpenReview (https://openreview.net) — open reviews in ML
-
-**Medicine / biology**:
-- PubMed (https://pubmed.ncbi.nlm.nih.gov)
-- Cochrane Library (https://www.cochranelibrary.com) — meta-analyses
-- WHO (https://www.who.int)
-- ClinicalTrials.gov (https://clinicaltrials.gov)
-
-**Humanities / social sciences**:
-- JSTOR (https://www.jstor.org)
-- SSRN (https://www.ssrn.com)
-- Project MUSE (https://muse.jhu.edu)
-
-**Code / technology**:
-- GitHub (https://github.com) — search, topics, expert starred lists
-- ketch `docs` for official documentation
-- RFCs (https://www.rfc-editor.org)
-- W3C specs (https://www.w3.org/TR/)
-
-**Data / statistics**:
-- World Bank (https://data.worldbank.org)
-- OECD Data (https://data.oecd.org)
-- Our World in Data (https://ourworldindata.org)
-- Pew Research (https://www.pewresearch.org)
-- Eurostat (https://ec.europa.eu/eurostat), INE, and national equivalents
-
-**Art / culture / humanities**:
-- Europeana (https://www.europeana.eu)
-- Google Arts & Culture (https://artsandculture.google.com)
-- Internet Archive (https://archive.org)
-- Project Gutenberg (https://www.gutenberg.org)
-
-**General**:
-- Wikipedia (https://en.wikipedia.org) — as a STARTING POINT. Always jump to the **references** section to reach Tier 1/2
-- Wikidata (https://www.wikidata.org) — structured data
+The skill presents the user with a list of seed sources **pre-loaded by domain** so they can **confirm, add, or reject** them: see `reference/domains.md` (sibling to this file) for the per-domain catalogue.
 
 **Local sources** (if the user provided paths):
 - List the folder structure
@@ -378,20 +319,22 @@ List every run saved under `memory/research/` in the current project:
 
 ---
 
-## Anti-patterns to actively reject
+## Quality bar
 
-1. **Flat search** — repeating queries with synonyms without digging into actual results
-2. **Ignoring Munger** — picking sources for comfort; the inversion is mandatory
-3. **Missing checkpoint** — advancing 5 cycles without dumping to disk
-4. **Tier 3 without references** — accepting a blog that does not explicitly cite Tier 1/2
-5. **Self-confirming the PhD** — declaring PhD level without the 5 measured criteria; if one is missing, do NOT close
-6. **Ignoring gaps** — closing without documenting what is unknown; gaps are part of the deliverable
-7. **Intellectual condescension** — hiding controversies or contradictions "so the synthesis stays clean"; intellectual honesty IS the result
-8. **Blindly trusting internal knowledge** — the agent's knowledge may be stale; always verify against a source
+Hold every cycle, and the closure, to these targets:
+
+1. **Dig past the first page** — open the actual results and follow their references, rather than re-querying synonyms.
+2. **Run Munger inversion on every source set** — pick against comfort, and add at least one contradictory source wherever one exists.
+3. **Checkpoint every cycle** — dump state to disk at the end of each cycle, before advancing.
+4. **Tier every source with its justification** — a Tier 3 source stands only when it explicitly cites Tier 1/2.
+5. **Earn the PhD claim with the 5 measured criteria** — declare PhD level only when all five hold; when one is missing, keep iterating.
+6. **Document the gaps** — record what remains unknown; gaps are part of the deliverable.
+7. **Keep the controversies visible** — surface contradictions and disagreements; intellectual honesty is the result.
+8. **Verify internal knowledge against a source** — the agent's knowledge may be stale.
 
 ---
 
-## Final structure of the generated files
+## Generated files
 
 ```
 memory/research/<slug>/
@@ -435,27 +378,18 @@ User: -
 Skill: Cycle cap? (default 20)
 User: 25
 
-Skill: Confirmed.
-       Seed: "episodic memory in humans"
-       Mode: mixed · Local: [C:/Dropbox/neuroscience-papers]
+Skill: Confirmed. Seed: "episodic memory in humans" · Mode: mixed · Local: [C:/Dropbox/neuroscience-papers]
        Prioritize: [Tulving, Maguire] · Cap: 25 cycles
-
-       Applying WDM + Munger to identify seed threads...
-       [shows table]
-
-       Selected threads:
-       1. Neuroanatomical foundations (hippocampus, PFC)
-       2. Phenomenology and taxonomy (Tulving et al.)
-       3. Disorders and dissociations (amnesia, Alzheimer's)
-       4. Computational models
-       5. Contemporary cognitive neuroscience
 
        The `memory/` folder does not exist. I am creating it — it is needed
        to consolidate each cycle to disk.
 
-       Path: memory/research/episodic-memory-in-humans/
+       Applying WDM + Munger to identify seed threads... Selected 5:
+       neuroanatomical foundations · phenomenology and taxonomy · disorders
+       and dissociations · computational models · contemporary cognitive neuroscience
 
-       Starting cycle 1 (thread with the lowest coverage: 1)...
+       Path: memory/research/episodic-memory-in-humans/
+       Starting cycle 1 (lowest-coverage thread: 1)...
 ```
 
 ---
@@ -466,4 +400,4 @@ Skill: Confirmed.
 - **License:** MIT — see the repository's `LICENSE` file
 - **Repository:** https://github.com/Anjos2/recursive-research
 
-Contributions are welcome. If you find an anti-pattern we missed, a better heuristic, or a more robust PhD criterion, open a PR.
+Contributions are welcome. If you find a quality-bar gap, a better heuristic, or a more robust PhD criterion, open a PR.

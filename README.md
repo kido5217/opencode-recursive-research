@@ -181,7 +181,9 @@ In `memory/research/<slug>/` of the active project:
 opencode-recursive-research/
 ├── skills/
 │   └── recursive-research/
-│       └── SKILL.md                    ← the skill
+│       ├── SKILL.md                    ← the skill
+│       └── reference/
+│           └── domains.md              ← per-domain threads + seed sources
 ├── CONTEXT.md                          ← EN/ES glossary
 ├── docs/
 │   ├── artifact-name-map.md            ← ES→EN artifact names
