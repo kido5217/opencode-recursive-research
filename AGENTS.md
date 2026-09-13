@@ -16,4 +16,4 @@ Single-context: `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/do
 
 ## Git
 
-The `main` branch is protected on GitHub: force pushes and deletions are blocked. Make changes on a branch and open a pull request; do not force-push `main`.
+The `main` branch is protected on GitHub: direct pushes, force pushes, and deletions are blocked, and the rule applies to admins too. Make changes on a branch and merge via a pull request.
