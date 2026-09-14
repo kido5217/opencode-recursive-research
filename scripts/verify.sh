@@ -5,7 +5,7 @@
 #   1. the skill installs via the `skills` CLI into a throwaway project
 #   2. opencode v1 (1.18.30) discovers it
 #   3. opencode v2 (2.0.2) advertises it
-#   4. an end-to-end smoke run executes Phase 1 and writes the workspace
+#   4. an end-to-end smoke run writes the workspace, a fixture + registry, and report.md
 #
 # Usage: scripts/verify.sh
 # Env:   VERIFY_MODEL=<provider/model>   (default: deepseek/deepseek-v4-flash)
@@ -60,11 +60,11 @@ else
   bad "opencode2 (v2) did not advertise $SKILL_ID after 3 attempts"
 fi
 
-echo "== 4. End-to-end smoke run (Phase 1 workspace) =="
-SMOKE_PROMPT="You are running non-interactively. Invoke the $SKILL_ID skill now. Answers to Phase 0: seed='opencode port smoke test'; mode=web; no local paths; no prioritized or excluded sources; cycle cap=1. Do NOT ask questions and do NOT perform any web searches. Execute Phase 1 only: create memory/research/<slug>/ with the initial files (state.md, threads.md, sources-tier-1.md, sources-tier-2.md, sources-tier-3.md, sources-rejected.md, findings.md). Then stop."
-EXPECTED=(state.md threads.md sources-tier-1.md sources-tier-2.md sources-tier-3.md sources-rejected.md findings.md)
+echo "== 4. End-to-end smoke run (fixtures + report) =="
+SMOKE_PROMPT="You are running non-interactively. Invoke the $SKILL_ID skill now. Answers to Phase 0: seed='opencode port smoke test'; mode=web; no local paths; no prioritized or excluded sources; cycle cap=1; retention threshold=5 MB. Do NOT ask questions and do NOT perform any web searches. Use this single fabricated source instead of searching: url=https://example.com, title='Example Domain', tier=2, thread='smoke'. Execute Phase 1; run one cycle that (a) writes a fixture at fixtures/webpage/<id>/page.md (text 'Example Domain') and fixtures/webpage/<id>/raw.html, (b) writes a searchset fixture fixtures/searchset/<id>/results.json containing that one result, (c) updates fixtures/registry.json; then run Phase 6 to write report.md. Stop once report.md exists."
+EXPECTED=(state.md threads.md sources-tier-1.md sources-tier-2.md sources-tier-3.md sources-rejected.md findings.md report.md fixtures/registry.json fixtures/registry.schema.json)
 SMOKE_OK=0
-for _ in 1 2; do
+for _ in 1 2 3; do
   ( cd "$WORKDIR" && opencode2 run --standalone --auto --model "$MODEL" "$SMOKE_PROMPT" >/dev/null 2>&1 || true )
   SMOKE_DIR="$(find "$WORKDIR/memory/research" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | head -1 || true)"
   [[ -n "$SMOKE_DIR" ]] || continue
@@ -73,9 +73,9 @@ for _ in 1 2; do
   if [[ "$missing" -eq 0 ]]; then SMOKE_OK=1; break; fi
 done
 if [[ "$SMOKE_OK" -eq 1 ]]; then
-  ok "smoke run created all 7 initial files under $(basename "$SMOKE_DIR")"
+  ok "smoke run created the workspace, fixtures registry, and report.md under $(basename "$SMOKE_DIR")"
 else
-  bad "smoke run did not create the full Phase 1 workspace"
+  bad "smoke run did not create the full workspace (${missing:-?} of ${#EXPECTED[@]} files missing)"
 fi
 
 echo
