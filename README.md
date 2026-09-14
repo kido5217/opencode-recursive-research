@@ -73,6 +73,8 @@ Invoke with `/recursive-research`, or let it auto-trigger from its description.
 
 The skill guides you interactively. Answer in natural language. `<slug>` is the kebab-case name of the topic (e.g. `episodic-memory-in-humans`).
 
+On opencode v2 the skill is deliberately **not** registered as a slash command (`metadata.opencode/slash: false` in the frontmatter). v2's skill-command path drops the trailing arguments, so a slash-invoked `/recursive-research --resume <slug>` would lose the slug and fall back to the run menu. Typing the line as a normal message — or letting the description auto-trigger the skill — keeps the arguments, exactly as on opencode v1.
+
 ### Usage examples by domain
 
 | Domain | Suggested seed |
