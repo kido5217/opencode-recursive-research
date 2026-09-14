@@ -6,6 +6,7 @@ metadata:
   version: "2.2.0"
   author: "Joseph Huayhualla (@Anjos2); opencode port"
   repository: "https://github.com/Anjos2/recursive-research"
+  opencode/slash: "false"
 ---
 
 # Skill: Deep Recursive Research
@@ -25,11 +26,13 @@ Self-regulated research that iterates until it reaches **PhD level** on a resear
 
 ## Full workflow
 
-### Phase 0 — Initial questions (the skill asks)
+### Phase 0 — Invocation handling, then initial questions (the skill asks)
 
-Invocation handling comes first: read the user's message for `--resume <slug>` or `--list` and handle that before anything else (see the `--resume` and `--list` sections).
+Read the invocation text — the user's message that triggered this skill, e.g. `/recursive-research --resume <slug>` — for a flag, **before doing anything else**:
 
-Otherwise, a bare `/recursive-research` (or an automatic trigger via the description) starts Phase 0. If `memory/research/` already holds runs, offer **resume / list / new** before asking the seed question.
+- **`--resume <slug>` present** → go straight to **`--resume` mode** and stop. The slug names the run: never enumerate runs or ask which one. If the slug is missing or matches no run, say so and show the available runs.
+- **`--list` present** → go straight to **`--list` mode** and stop.
+- **Neither present** → continue Phase 0. If `memory/research/` already holds runs, offer **resume / list / new** before asking the seed question.
 
 Then the skill asks the user, in order:
 
@@ -297,16 +300,17 @@ What do you prefer?
 
 ## `--resume` mode
 
-Invocation: `/recursive-research --resume <slug>`
+Invocation: `/recursive-research --resume <slug>` — `<slug>` is the run's folder name under `memory/research/`.
 
 1. Look for `memory/research/<slug>/`
-2. If it does not exist → clear error, suggest a plain `/recursive-research`
-3. If it exists:
+2. If no exact folder matches, look for a run whose slug or seed matches `<slug>` case-insensitively before giving up.
+3. If still nothing matches → say clearly that no run matches `<slug>`, list the available runs, and stop. Do not silently fall back to the resume/list/new menu.
+4. If it exists:
    - Read `state.md` → rebuild the metrics
    - Read the latest `cycle-N.md` → recent context
    - Read `threads.md` → current tree
    - Present: "Resuming from cycle N. Next step: [thread X]. Continue?"
-4. Continue the loop from Phase 5
+5. Continue the loop from Phase 5
 
 ---
 
