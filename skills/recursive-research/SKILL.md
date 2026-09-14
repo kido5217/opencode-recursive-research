@@ -330,11 +330,16 @@ Invocation: `/recursive-research --resume <slug>` — `<slug>` is the run's fold
 2. If no exact folder matches, look for a run whose slug or seed matches `<slug>` case-insensitively before giving up.
 3. If still nothing matches → say clearly that no run matches `<slug>`, list the available runs, and stop. Do not silently fall back to the resume/list/new menu.
 4. If it exists:
-   - Read `state.md` → rebuild the metrics
+   - Read `state.md` → rebuild the metrics (coverage, saturation, counters)
    - Read the latest `cycle-N.md` → recent context
    - Read `threads.md` → current tree
+   - Read `fixtures/registry.json` → the fixture index
+   - **Reconcile the registry:** drop entries whose `fixtures/<kind>/<id>/` directory is gone, and add entries discovered on disk that are missing from the index (mark these `notes: "reconstructed"`).
+   - **If `registry.json` is missing** but `fixtures/` exists, rebuild it by scanning `fixtures/<kind>/<id>/` and synthesising minimal entries (`id`/`kind`/`local_path` from the directory names, `notes: "reconstructed"`). **If it is corrupt**, stop, tell the user, and offer the same rebuild.
+   - Verify fixture bytes **lazily** — only when a fixture is actually referenced. If a `captured` fixture's file is absent, downgrade it to `pointer-only`, note the absence, and offer re-capture on demand.
    - Present: "Resuming from cycle N. Next step: [thread X]. Continue?"
-5. Continue the loop from Phase 5
+5. Continue the loop from Phase 5. Before capturing any source, look up its `id` in `fixtures/registry.json`; if present, reuse it and skip the fetch unless freshness was requested (`--no-cache`).
+6. If the run then closes (natural / forced / partial), Phase 6 **regenerates `report.md` from scratch** (overwrite). A mid-run resume never creates one.
 
 ---
 
@@ -343,7 +348,7 @@ Invocation: `/recursive-research --resume <slug>` — `<slug>` is the run's fold
 Invocation: `/recursive-research --list`
 
 List every run saved under `memory/research/` in the current project:
-- Slug · Seed · Cycles completed · Status (open / closed) · Last modified
+- Slug · Seed · Cycles completed · Status (open / closed) · Last modified · Fixtures (count) · Report (yes / no)
 
 ---
 
