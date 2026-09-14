@@ -1,0 +1,20 @@
+[
+  {
+    "title": "Caffeine effects on sleep taken 0, 3, or 6 hours before going to bed",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/24235903/",
+    "description": "Double-blind crossover study of 400 mg caffeine at 0, 3, or 6 hours before bedtime.",
+    "backends": ["exa", "brave"]
+  },
+  {
+    "title": "Caffeine and sleep: a systematic review",
+    "url": "https://www.sciencedirect.com/science/article/pii/S1087079216300369",
+    "description": "Systematic review of caffeine's effects on sleep parameters.",
+    "backends": ["exa"]
+  },
+  {
+    "title": "Why caffeine ruins your sleep (and what to do)",
+    "url": "https://example-blog.invalid/caffeine-sleep",
+    "description": "Popular-science overview.",
+    "backends": ["brave"]
+  }
+]

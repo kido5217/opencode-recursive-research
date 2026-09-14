@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/recursive-research/registry.schema.json",
+  "title": "recursive-research fixture registry",
+  "type": "object",
+  "required": ["schema_version", "run", "fixtures"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "run": {
+      "type": "object",
+      "required": ["slug", "seed"],
+      "additionalProperties": false,
+      "properties": {
+        "slug": { "type": "string" },
+        "seed": { "type": "string" }
+      }
+    },
+    "fixtures": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/fixture" }
+    }
+  },
+  "$defs": {
+    "fixture": {
+      "type": "object",
+      "required": ["id", "kind", "captured_at", "tool", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^(webpage|searchset|document|media|git|other)-[0-9a-f]{12}$" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "kind": { "enum": ["webpage", "searchset", "document", "media", "git", "other"] },
+        "url": { "type": "string" },
+        "fetched_url": { "type": "string" },
+        "title": { "type": "string" },
+        "author": { "type": "string" },
+        "tier": { "type": ["integer", "null"], "enum": [1, 2, 3, null] },
+        "cycle": { "type": ["integer", "null"], "minimum": 1 },
+        "thread": { "type": ["string", "null"] },
+        "captured_at": { "type": "string", "format": "date-time" },
+        "tool": { "type": "string" },
+        "status": { "enum": ["captured", "pointer-only", "failed"] },
+        "media_type": { "type": "string" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "local_path": { "type": "string" },
+        "git_commit": { "type": "string" },
+        "license": { "type": "string" },
+        "notes": { "type": "string" },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["role", "path"],
+            "additionalProperties": false,
+            "properties": {
+              "role": { "enum": ["page", "raw_html", "results", "document", "media", "info", "repo", "other"] },
+              "path": { "type": "string" },
+              "media_type": { "type": "string" },
+              "bytes": { "type": "integer", "minimum": 0 },
+              "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
