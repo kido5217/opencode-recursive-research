@@ -107,11 +107,13 @@ Before the first cycle, detect which research capabilities the environment expos
 
 Real-browser / JS-rendering MCPs are deprioritized: use them only when the content genuinely requires explicit JS execution (SPAs without SSR, content behind auth). AI-optimized scrapers are 10-50× faster than real browsers and return already-structured text.
 
-**Raw capture (fixtures).** Persist each selected source as a *fixture* under `memory/research/<slug>/fixtures/` and index it in `fixtures/registry.json` (see §Fixture registry). Tracer scope — webpages and search-result sets:
+**Raw capture (fixtures).** Persist each selected source as a *fixture* under `memory/research/<slug>/fixtures/` and index it in `fixtures/registry.json` (see §Fixture registry). Capture at the fetch that produced the content; if the tool is absent or the fetch fails, record a `pointer-only` fixture (URL + metadata, no bytes) — never silently skip.
 
 - **Webpage** → `ketch scrape --raw --json <url>` yields `markdown`, `raw_html`, and `source` in one fetch; write `page.md` + `raw.html`.
 - **Search-result set** → `ketch search --json` (both passes merged and deduped); write `results.json`.
-- If the tool is absent or the fetch fails, record a `pointer-only` fixture (URL + metadata, no bytes) — never silently skip.
+- **Document (PDF)** → text-layer PDF via `ketch scrape --json` → `doc.md`; a scanned PDF (ketch reports no text layer) → download bytes with `curl`/`wget` → `doc.pdf`.
+- **Document (OOXML/office)** → download bytes with `curl`/`wget` → `doc.<ext>`; additionally attempt `python3` stdlib `zipfile` XML extraction → `doc.txt` (docx/xlsx/pptx are zip + XML). A failed extraction is recorded in `notes`, never silent.
+- **Media (audio/video)** → `yt-dlp --write-info-json` for streaming sites, or `curl`/`wget` for direct URLs → the media file + `info.json`; `ffmpeg` is used **only on demand** (transcode/remux/extract), never by default.
 
 ---
 
