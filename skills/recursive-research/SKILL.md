@@ -42,6 +42,7 @@ Then the skill asks the user, in order:
 4. **Prioritized sources** (optional): authors, domains, preferred publications
 5. **Excluded sources** (optional)
 6. **Hard cycle cap** (default: 20; configurable)
+7. **Fixture retention** (optional): size threshold above which binary fixtures are gitignored (default: 5 MB)
 
 The skill presents a summary and waits for confirmation before starting.
 
@@ -54,6 +55,8 @@ The skill presents a summary and waits for confirmation before starting.
    - **If `memory/` does NOT exist, create it**, explaining: *"The `memory/` folder does not exist in the project. I am creating it because the skill needs to consolidate findings to disk each cycle — that is what lets a run resume in a new session."*
 3. Create the initial files (see §Generated files for the full layout and what each holds):
    `state.md`, `threads.md`, `findings.md`, `sources-tier-1.md`, `sources-tier-2.md`, `sources-tier-3.md`, `sources-rejected.md`
+4. Create the fixture store (see §Fixture registry):
+   `fixtures/registry.schema.json` (the committed schema), `fixtures/registry.json` (with an empty `fixtures` array), and `fixtures/.gitignore` (nested — never the project-root `.gitignore`).
 
 ---
 
@@ -104,6 +107,15 @@ Before the first cycle, detect which research capabilities the environment expos
 
 Real-browser / JS-rendering MCPs are deprioritized: use them only when the content genuinely requires explicit JS execution (SPAs without SSR, content behind auth). AI-optimized scrapers are 10-50× faster than real browsers and return already-structured text.
 
+**Raw capture (fixtures).** Persist each selected source as a *fixture* under `memory/research/<slug>/fixtures/` and index it in `fixtures/registry.json` (see §Fixture registry). Capture at the fetch that produced the content; if the tool is absent or the fetch fails, record a `pointer-only` fixture (URL + metadata, no bytes) — never silently skip.
+
+- **Webpage** → `ketch scrape --raw --json <url>` yields `markdown`, `raw_html`, and `source` in one fetch; write `page.md` + `raw.html`.
+- **Search-result set** → `ketch search --json` (both passes merged and deduped); write `results.json`.
+- **Document (PDF)** → text-layer PDF via `ketch scrape --json` → `doc.md`; a scanned PDF (ketch reports no text layer) → download bytes with `curl`/`wget` → `doc.pdf`.
+- **Document (OOXML/office)** → download bytes with `curl`/`wget` → `doc.<ext>`; additionally attempt `python3` stdlib `zipfile` XML extraction → `doc.txt` (docx/xlsx/pptx are zip + XML). A failed extraction is recorded in `notes`, never silent.
+- **Media (audio/video)** → `yt-dlp --write-info-json` for streaming sites, or `curl`/`wget` for direct URLs → the media file + `info.json`; `ffmpeg` is used **only on demand** (transcode/remux/extract), never by default.
+- **Git repo** → full `git clone` (**no `--depth 1`**) into `fixtures/git/<id>/repo/`; the registry records the remote URL and the `HEAD` SHA. Use `--recurse-submodules`, and `git lfs pull` when the repo uses LFS and `git-lfs` is present. A clone failure or timeout → `pointer-only` (remote URL, plus the commit SHA when resolvable).
+
 ---
 
 ### Phase 4 — Suggested seed sources
@@ -150,6 +162,16 @@ Select the top 3-5.
 - For general web search, run the two-pass ketch search and merge/dedupe as described in Phase 3
 - Extract: concrete facts, numerical data, verbatim quotes with attribution, names of new people/works/concepts
 - Record them in the cycle's working notes
+
+#### 5.3b. Capture the cycle's fixtures
+
+For each source selected in 5.2 and fetched in 5.3:
+
+1. Compute the fixture `id`: `<kind>-<sha256(normalized url|query)[:12]>`.
+2. If the `id` is already in `fixtures/registry.json`, do not re-fetch; update in place only when freshness was requested (`--no-cache`).
+3. Write the representations under `fixtures/<kind>/<id>/` and build the registry entry (fields in §Fixture registry), recording `captured_at`, `tool`, and per-file `bytes` and `sha256`.
+4. Write the cycle's merged search-result set as one `searchset` fixture.
+5. Merge the entries into `fixtures/registry.json` with an **atomic write** (temp file + rename).
 
 #### 5.4. Apply tiering to every source consulted
 
@@ -270,7 +292,9 @@ Whether closure is natural (5 criteria met), forced (cycle cap), or partial (man
    - What bias does my set of sources have?
    - What question should a critical reviewer ask me that I cannot answer?
 
-4. **Ask the user**:
+4. **`report.md`** — the single consolidated report. Build it from the artifacts above in this fixed order: title + run metadata; table of contents; executive summary (from `synthesis.md`); findings by thread with cross-references; thread map; sources (T1–T3 table with tier + fixture link); fixtures (registry table, grouped by thread); controversies & contradictions; knowledge gaps; actions; method & provenance. Inline everything **except fixture bodies**, which are linked by relative path from the fixtures table. Append a rejected-sources appendix and a per-cycle audit appendix.
+
+5. **Ask the user**:
 
 ```
 [RESEARCH COMPLETE — status: natural / forced / paused]
@@ -306,11 +330,16 @@ Invocation: `/recursive-research --resume <slug>` — `<slug>` is the run's fold
 2. If no exact folder matches, look for a run whose slug or seed matches `<slug>` case-insensitively before giving up.
 3. If still nothing matches → say clearly that no run matches `<slug>`, list the available runs, and stop. Do not silently fall back to the resume/list/new menu.
 4. If it exists:
-   - Read `state.md` → rebuild the metrics
+   - Read `state.md` → rebuild the metrics (coverage, saturation, counters)
    - Read the latest `cycle-N.md` → recent context
    - Read `threads.md` → current tree
+   - Read `fixtures/registry.json` → the fixture index
+   - **Reconcile the registry:** drop entries whose `fixtures/<kind>/<id>/` directory is gone, and add entries discovered on disk that are missing from the index (mark these `notes: "reconstructed"`).
+   - **If `registry.json` is missing** but `fixtures/` exists, rebuild it by scanning `fixtures/<kind>/<id>/` and synthesising minimal entries (`id`/`kind`/`local_path` from the directory names, `notes: "reconstructed"`). **If it is corrupt**, stop, tell the user, and offer the same rebuild.
+   - Verify fixture bytes **lazily** — only when a fixture is actually referenced. If a `captured` fixture's file is absent, downgrade it to `pointer-only`, note the absence, and offer re-capture on demand.
    - Present: "Resuming from cycle N. Next step: [thread X]. Continue?"
-5. Continue the loop from Phase 5
+5. Continue the loop from Phase 5. Before capturing any source, look up its `id` in `fixtures/registry.json`; if present, reuse it and skip the fetch unless freshness was requested (`--no-cache`).
+6. If the run then closes (natural / forced / partial), Phase 6 **regenerates `report.md` from scratch** (overwrite). A mid-run resume never creates one.
 
 ---
 
@@ -319,7 +348,7 @@ Invocation: `/recursive-research --resume <slug>` — `<slug>` is the run's fold
 Invocation: `/recursive-research --list`
 
 List every run saved under `memory/research/` in the current project:
-- Slug · Seed · Cycles completed · Status (open / closed) · Last modified
+- Slug · Seed · Cycles completed · Status (open / closed) · Last modified · Fixtures (count) · Report (yes / no)
 
 ---
 
@@ -335,6 +364,8 @@ Hold every cycle, and the closure, to these targets:
 6. **Document the gaps** — record what remains unknown; gaps are part of the deliverable.
 7. **Keep the controversies visible** — surface contradictions and disagreements; intellectual honesty is the result.
 8. **Verify internal knowledge against a source** — the agent's knowledge may be stale.
+9. **Capture a fixture for every selected source** — persist the raw evidence and index it in `fixtures/registry.json`; a source without a fixture is not auditable.
+10. **Close with one report** — `report.md` is the deliverable; a run is not complete until it exists.
 
 ---
 
@@ -354,8 +385,62 @@ memory/research/<slug>/
 ├── cycle-N.md
 ├── synthesis.md           ← executive synthesis (Phase 6)
 ├── actions.md             ← checklist of actionable items
-└── gaps.md                ← what is NOT known, controversies, biases
+├── gaps.md                ← what is NOT known, controversies, biases
+├── report.md              ← single consolidated report (Phase 6)
+└── fixtures/              ← raw captures + machine-readable index
+    ├── registry.json      ← the fixture registry (always tracked)
+    ├── registry.schema.json
+    ├── .gitignore         ← nested; binaries over the threshold, git/*/repo/
+    └── <kind>/<id>/       ← one directory per fixture (page.md, raw.html, …)
 ```
+
+---
+
+## Fixture registry
+
+Every consulted source selected for a cycle is persisted as a **fixture** under `fixtures/` and indexed in `fixtures/registry.json`:
+
+```json
+{
+  "$schema": "./registry.schema.json",
+  "schema_version": "1.0.0",
+  "run": { "slug": "<slug>", "seed": "<seed>" },
+  "fixtures": [
+    {
+      "id": "webpage-<12 hex>",
+      "revision": 1,
+      "kind": "webpage",
+      "url": "https://…",
+      "fetched_url": "https://…",
+      "title": "…",
+      "author": "…",
+      "tier": 1,
+      "cycle": 1,
+      "thread": "…",
+      "captured_at": "2026-01-01T00:00:00Z",
+      "tool": "ketch scrape --raw --json",
+      "status": "captured",
+      "media_type": "text/markdown",
+      "bytes": 1842,
+      "sha256": "<64 hex>",
+      "local_path": "fixtures/webpage/webpage-<12 hex>",
+      "license": "…",
+      "notes": "…",
+      "files": [
+        { "role": "page", "path": "page.md", "media_type": "text/markdown", "bytes": 1842, "sha256": "<64 hex>" },
+        { "role": "raw_html", "path": "raw.html", "media_type": "text/html", "bytes": 41233, "sha256": "<64 hex>" }
+      ]
+    }
+  ]
+}
+```
+
+- **Kinds:** `webpage | searchset | document | media | git | other`. Raw HTML is a file `role`, not a kind.
+- **id:** `<kind>-<sha256(normalized url|query|remote)[:12]>` — stable across cycles and `--resume`.
+- **status:** `captured | pointer-only | failed`.
+- **Required fields:** `id, kind, captured_at, tool, status`; everything else is optional.
+- **Retention:** `registry.json`, `registry.schema.json`, and text fixtures are tracked; binaries above the size threshold (default 5 MB, set in Phase 0) are gitignored via the nested `fixtures/.gitignore`; `fixtures/git/<id>/repo/` is always ignored. When `git-lfs` is installed and the project already uses LFS (or the user opts in), **ask first**, naming the tradeoffs — repo/remote size growth, LFS storage quota, extra setup, a `.gitattributes` change, and that non-LFS clones receive pointers — then run `git lfs track "fixtures/**"` only on agreement. Never run `git lfs install` or edit `.gitattributes` without agreement.
+- **Validation:** JSON-parse plus required-field checks (`jq` / `python3`); `fixtures/registry.schema.json` is the committed JSON Schema 2020-12.
 
 ---
 
