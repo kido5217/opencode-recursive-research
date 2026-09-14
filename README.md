@@ -14,10 +14,12 @@ You give it a **research seed** (a topic) and the skill:
 2. Identifies **3-5 seed threads** applying [WDM (Weighted Decision Matrix) + Munger inversion](#wdm--munger-inversion).
 3. Detects the available research capabilities and prefers **ketch** (MCP, then CLI), falling back to built-in web search/fetch.
 4. **Iterates in self-regulating cycles** — each cycle picks the least-covered thread, selects sources, investigates, and consolidates.
-5. Tiers every source into **Tier 1 / 2 / 3 / Rejected** with transparent criteria.
-6. Saves **disk checkpoints** every cycle — survives context compaction.
-7. Closes when the **5-criteria PhD fitness function** is met, or upon hitting the cycle cap.
-8. Asks if you want to keep going. **Research can be infinite.**
+5. **Captures raw fixtures** — every selected source is persisted under `fixtures/` and indexed by a machine-readable `fixtures/registry.json`: web pages + raw HTML, search-result sets, documents, media, and full git clones.
+6. Tiers every source into **Tier 1 / 2 / 3 / Rejected** with transparent criteria.
+7. Saves **disk checkpoints** every cycle — survives context compaction.
+8. Closes when the **5-criteria PhD fitness function** is met, or upon hitting the cycle cap.
+9. Emits **one consolidated `report.md`** holding all the research.
+10. Asks if you want to keep going. **Research can be infinite.**
 
 ---
 
@@ -31,6 +33,7 @@ You give it a **research seed** (a topic) and the skill:
 | **Self-critical** | Munger inversion applied to the consolidated knowledge: what do I not know? what bias do my sources share? what's missing? |
 | **Asks before assuming** | Full Phase 0 interrogation of the user |
 | **Transparent** | Every non-trivial autonomous decision runs WDM + Munger and shows the reasoning |
+| **Keeps the raw evidence** | Every selected source is saved verbatim under `fixtures/` and indexed in `fixtures/registry.json` — auditable, not just summarised |
 
 ---
 
@@ -172,8 +175,18 @@ In `memory/research/<slug>/` of the active project:
 - `sources-tier-1.md` · `sources-tier-2.md` · `sources-tier-3.md` · `sources-rejected.md`
 - `cycle-01.md`, `cycle-02.md`, ..., `cycle-N.md` (checkpoints)
 - `synthesis.md` · `actions.md` · `gaps.md` (upon closing)
+- `report.md` — the single consolidated report (upon closing)
+- `fixtures/` — raw captures plus `registry.json` (machine-readable index) and `registry.schema.json`; a nested `.gitignore` keeps binaries over the size threshold (default 5 MB) and git clones out of version control
 
 **If `memory/` doesn't exist in the project, the skill creates it** (notifying the user) — it's an explicit dependency.
+
+---
+
+## Fixtures & the report
+
+- **Fixtures** are verbatim captures of each selected source, stored under `memory/research/<slug>/fixtures/<kind>/<id>/` (kinds: `webpage`, `searchset`, `document`, `media`, `git`, `other`). `fixtures/registry.json` is the machine-readable index — stable source-derived ids, per-file hashes, tier, cycle, thread, and status (`captured` / `pointer-only` / `failed`), validated by `fixtures/registry.schema.json` (JSON Schema 2020-12).
+- **`report.md`** is the single self-contained report written at closure: executive summary, findings by thread, thread map, sources, fixtures, controversies, gaps, actions, and method — it inlines everything except fixture bodies, which it links.
+- **Retention:** text fixtures are tracked by git; binaries above the size threshold are gitignored by a nested `fixtures/.gitignore`; git clones are always ignored. With your explicit agreement the skill can use `git-lfs` (`git lfs track "fixtures/**"`) instead of ignoring — it never touches your git config silently.
 
 ---
 

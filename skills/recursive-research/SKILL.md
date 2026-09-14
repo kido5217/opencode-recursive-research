@@ -434,7 +434,7 @@ Every consulted source selected for a cycle is persisted as a **fixture** under 
 - **id:** `<kind>-<sha256(normalized url|query|remote)[:12]>` — stable across cycles and `--resume`.
 - **status:** `captured | pointer-only | failed`.
 - **Required fields:** `id, kind, captured_at, tool, status`; everything else is optional.
-- **Retention:** `registry.json`, `registry.schema.json`, and text fixtures are tracked; binaries above the size threshold are gitignored via the nested `fixtures/.gitignore`; `fixtures/git/<id>/repo/` is always ignored. With the user's explicit agreement, `git lfs track "fixtures/**"` may be used instead of ignoring — never run `git lfs install` or edit `.gitattributes` without agreement.
+- **Retention:** `registry.json`, `registry.schema.json`, and text fixtures are tracked; binaries above the size threshold (default 5 MB, set in Phase 0) are gitignored via the nested `fixtures/.gitignore`; `fixtures/git/<id>/repo/` is always ignored. When `git-lfs` is installed and the project already uses LFS (or the user opts in), **ask first**, naming the tradeoffs — repo/remote size growth, LFS storage quota, extra setup, a `.gitattributes` change, and that non-LFS clones receive pointers — then run `git lfs track "fixtures/**"` only on agreement. Never run `git lfs install` or edit `.gitattributes` without agreement.
 - **Validation:** JSON-parse plus required-field checks (`jq` / `python3`); `fixtures/registry.schema.json` is the committed JSON Schema 2020-12.
 
 ---
