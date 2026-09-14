@@ -114,6 +114,7 @@ Real-browser / JS-rendering MCPs are deprioritized: use them only when the conte
 - **Document (PDF)** → text-layer PDF via `ketch scrape --json` → `doc.md`; a scanned PDF (ketch reports no text layer) → download bytes with `curl`/`wget` → `doc.pdf`.
 - **Document (OOXML/office)** → download bytes with `curl`/`wget` → `doc.<ext>`; additionally attempt `python3` stdlib `zipfile` XML extraction → `doc.txt` (docx/xlsx/pptx are zip + XML). A failed extraction is recorded in `notes`, never silent.
 - **Media (audio/video)** → `yt-dlp --write-info-json` for streaming sites, or `curl`/`wget` for direct URLs → the media file + `info.json`; `ffmpeg` is used **only on demand** (transcode/remux/extract), never by default.
+- **Git repo** → full `git clone` (**no `--depth 1`**) into `fixtures/git/<id>/repo/`; the registry records the remote URL and the `HEAD` SHA. Use `--recurse-submodules`, and `git lfs pull` when the repo uses LFS and `git-lfs` is present. A clone failure or timeout → `pointer-only` (remote URL, plus the commit SHA when resolvable).
 
 ---
 
