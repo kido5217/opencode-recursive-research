@@ -131,3 +131,25 @@ _Avoid_: report, summary
 The prioritized, actionable checklist produced at closure.
 (ES: *acciones*)
 _Avoid_: todos, next steps
+
+### Fixtures and the report
+
+**Fixture**:
+A verbatim capture of one source's content, persisted to disk under a run's `fixtures/` folder and indexed in the fixture registry.
+_Avoid_: snapshot, capture, artifact, source file
+
+**Fixture kind**:
+The source class a fixture belongs to: `webpage`, `searchset`, `document`, `media`, `git`, or `other`.
+_Avoid_: type, category
+
+**Representation**:
+One file within a fixture — its role, path, media type, byte size, and content hash.
+_Avoid_: file, asset, variant
+
+**Fixture registry**:
+The machine-readable index of a run's fixtures, `fixtures/registry.json`, validated by `fixtures/registry.schema.json`.
+_Avoid_: index, manifest, catalog
+
+**Report**:
+The single consolidated Markdown file produced at closure that holds all of a run's research, referencing fixtures rather than embedding them.
+_Avoid_: final report, output, summary
