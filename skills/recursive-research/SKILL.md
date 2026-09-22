@@ -159,7 +159,7 @@ Select the top 3-5.
 #### 5.3. Run searches / reads
 
 - Use the research capabilities in the order detected in Phase 3 (ketch tools → ketch CLI → built-in → other MCPs)
-- For general web search, run the ketch search as described in Phase 3 (default backend first, `multi: ["all"]` retry only when that pass is insufficient), merging/deduping when both passes ran
+- For general web search, run the ketch search as described in Phase 3
 - Extract: concrete facts, numerical data, verbatim quotes with attribution, names of new people/works/concepts
 - Record them in the cycle's working notes
 
