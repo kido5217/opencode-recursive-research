@@ -129,7 +129,7 @@ The skill detects what your environment exposes and uses the first available run
 3. **Built-in web search / fetch** — universal fallback
 4. **Other research MCPs** — any you have configured
 
-For general web search it calls ketch search **both** with `multi: ["all"]` (federated across backends) and with the default backend, then merges and dedupes the two result sets before tiering. It scrapes only the URLs selected as a cycle's sources, not every hit.
+For general web search it calls ketch search first with the default backend, and only when the results are insufficient retries with `multi: ["all"]` (federated across backends), merging and deduping the two result sets before tiering. It scrapes only the URLs selected as a cycle's sources, not every hit.
 
 Real-browser / JS-rendering MCPs are deprioritized: use them only when content genuinely requires JS execution (SPAs without SSR, content behind auth).
 
