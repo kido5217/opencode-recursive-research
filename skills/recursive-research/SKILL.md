@@ -98,7 +98,7 @@ Before the first cycle, detect which research capabilities the environment expos
 **Detection note (one line):** check whether the ketch MCP tools are present in your tool list, else run `which ketch`; record which rung you landed on before the first cycle.
 
 **Routing (when ketch is available, MCP or CLI):**
-- **General web search** → ketch `search`; call it **twice** — once with `multi: ["all"]` and once with the default backend — then merge and dedupe the two result sets by normalized URL, keeping both sets for tiering.
+- **General web search** → ketch `search`; run it first with the default backend. If that pass is insufficient (too few usable results, or none on-target for the thread), retry with `multi: ["all"]`, then merge and dedupe the two result sets by normalized URL, keeping both sets for tiering.
 - **Repo / code-example questions** → ketch `code`.
 - **Library / framework documentation** → ketch `docs` (replacing the previous docs-MCP path).
 - **URLs already in hand** → ketch `scrape`.
@@ -110,7 +110,7 @@ Real-browser / JS-rendering MCPs are deprioritized: use them only when the conte
 **Raw capture (fixtures).** Persist each selected source as a *fixture* under `memory/research/<slug>/fixtures/` and index it in `fixtures/registry.json` (see §Fixture registry). Capture at the fetch that produced the content; if the tool is absent or the fetch fails, record a `pointer-only` fixture (URL + metadata, no bytes) — never silently skip.
 
 - **Webpage** → `ketch scrape --raw --json <url>` yields `markdown`, `raw_html`, and `source` in one fetch; write `page.md` + `raw.html`.
-- **Search-result set** → `ketch search --json` (both passes merged and deduped); write `results.json`.
+- **Search-result set** → `ketch search --json` (default pass, merged with the multi pass when it ran); write `results.json`.
 - **Document (PDF)** → text-layer PDF via `ketch scrape --json` → `doc.md`; a scanned PDF (ketch reports no text layer) → download bytes with `curl`/`wget` → `doc.pdf`.
 - **Document (OOXML/office)** → download bytes with `curl`/`wget` → `doc.<ext>`; additionally attempt `python3` stdlib `zipfile` XML extraction → `doc.txt` (docx/xlsx/pptx are zip + XML). A failed extraction is recorded in `notes`, never silent.
 - **Media (audio/video)** → `yt-dlp --write-info-json` for streaming sites, or `curl`/`wget` for direct URLs → the media file + `info.json`; `ffmpeg` is used **only on demand** (transcode/remux/extract), never by default.
@@ -159,7 +159,7 @@ Select the top 3-5.
 #### 5.3. Run searches / reads
 
 - Use the research capabilities in the order detected in Phase 3 (ketch tools → ketch CLI → built-in → other MCPs)
-- For general web search, run the two-pass ketch search and merge/dedupe as described in Phase 3
+- For general web search, run the ketch search as described in Phase 3
 - Extract: concrete facts, numerical data, verbatim quotes with attribution, names of new people/works/concepts
 - Record them in the cycle's working notes
 
