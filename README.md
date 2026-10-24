@@ -69,14 +69,15 @@ Invoke with `/recursive-research`, or let it auto-trigger from its description.
 ## Usage
 
 ```
-/recursive-research                    # start a run (Phase 0 asks for the seed)
-/recursive-research --resume <slug>    # resume a paused run
-/recursive-research --list             # list saved runs
+/recursive-research                       # start a run (Phase 0 asks for the seed)
+/recursive-research --target docs/deep    # run in docs/deep instead of ./research
+/recursive-research --resume              # resume the run at the active target
+/recursive-research --list                # summarize the run at the active target
 ```
 
-The skill guides you interactively. Answer in natural language. `<slug>` is the kebab-case name of the topic (e.g. `episodic-memory-in-humans`).
+The skill guides you interactively. Answer in natural language. The workspace is `research/` in the directory you invoke from; `--target <dir>` replaces it and the path identifies the run (the kebab-case topic slug — e.g. `episodic-memory-in-humans` — lives in `state.md`, not in the path).
 
-On opencode v2 the skill is deliberately **not** registered as a slash command (`metadata.opencode/slash: false` in the frontmatter). v2's skill-command path drops the trailing arguments, so a slash-invoked `/recursive-research --resume <slug>` would lose the slug and fall back to the run menu. Typing the line as a normal message — or letting the description auto-trigger the skill — keeps the arguments, exactly as on opencode v1.
+On opencode v2 the skill is deliberately **not** registered as a slash command (`metadata.opencode/slash: false` in the frontmatter). v2's skill-command path drops the trailing arguments, so a slash-invoked `/recursive-research --target docs/deep` would lose the flag and fall back to the default workspace. Typing the line as a normal message — or letting the description auto-trigger the skill — keeps the arguments, exactly as on opencode v1.
 
 ### Usage examples by domain
 
@@ -169,7 +170,7 @@ Reference: [Charlie Munger's essay on mental inversion](https://fs.blog/inversio
 
 ## Generated files
 
-In `memory/research/<slug>/` of the active project:
+Directly in the workspace — `research/` in the directory the skill runs from, or your `--target <dir>`:
 
 - `state.md` · `threads.md` · `findings.md`
 - `sources-tier-1.md` · `sources-tier-2.md` · `sources-tier-3.md` · `sources-rejected.md`
@@ -178,13 +179,13 @@ In `memory/research/<slug>/` of the active project:
 - `report.md` — the single consolidated report (upon closing)
 - `fixtures/` — raw captures plus `registry.json` (machine-readable index) and `registry.schema.json`; a nested `.gitignore` keeps binaries over the size threshold (default 5 MB) and git clones out of version control
 
-**If `memory/` doesn't exist in the project, the skill creates it** (notifying the user) — it's an explicit dependency.
+**If the workspace doesn't exist in the project, the skill creates it** (notifying the user) — it's an explicit dependency. If it already holds a run, the skill asks before resuming, overwriting, or taking another target. v3 is a clean break from the legacy `memory/research/<slug>/` layout: move or delete old folders yourself.
 
 ---
 
 ## Fixtures & the report
 
-- **Fixtures** are verbatim captures of each selected source, stored under `memory/research/<slug>/fixtures/<kind>/<id>/` (kinds: `webpage`, `searchset`, `document`, `media`, `git`, `other`). `fixtures/registry.json` is the machine-readable index — stable source-derived ids, per-file hashes, tier, cycle, thread, and status (`captured` / `pointer-only` / `failed`), validated by `fixtures/registry.schema.json` (JSON Schema 2020-12).
+- **Fixtures** are verbatim captures of each selected source, stored under the workspace's `fixtures/<kind>/<id>/` (kinds: `webpage`, `searchset`, `document`, `media`, `git`, `other`). `fixtures/registry.json` is the machine-readable index — stable source-derived ids, per-file hashes, tier, cycle, thread, and status (`captured` / `pointer-only` / `failed`), validated by `fixtures/registry.schema.json` (JSON Schema 2020-12).
 - **`report.md`** is the single self-contained report written at closure: executive summary, findings by thread, thread map, sources, fixtures, controversies, gaps, actions, and method — it inlines everything except fixture bodies, which it links.
 - **Retention:** text fixtures are tracked by git; binaries above the size threshold are gitignored by a nested `fixtures/.gitignore`; git clones are always ignored. With your explicit agreement the skill can use `git-lfs` (`git lfs track "fixtures/**"`) instead of ignoring — it never touches your git config silently.
 

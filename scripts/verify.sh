@@ -12,7 +12,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORKDIR="$(mktemp -d "${TMPDIR:-/tmp}/recursive-research-verify.XXXXXX")"
-MODEL="${VERIFY_MODEL:-deepseek/deepseek-v4-flash}"
+MODEL="${VERIFY_MODEL:-deepseek/deepseek-flash}"
 SKILL_ID="recursive-research"
 PASS=0
 FAIL=0
@@ -54,8 +54,8 @@ EXPECTED=(state.md threads.md sources-tier-1.md sources-tier-2.md sources-tier-3
 SMOKE_OK=0
 for _ in 1 2 3; do
   ( cd "$WORKDIR" && opencode run --standalone --auto --model "$MODEL" "$SMOKE_PROMPT" >/dev/null 2>&1 || true )
-  SMOKE_DIR="$(find "$WORKDIR/memory/research" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | head -1 || true)"
-  [[ -n "$SMOKE_DIR" ]] || continue
+  SMOKE_DIR="$WORKDIR/research"
+  [[ -d "$SMOKE_DIR" ]] || continue
   missing=0
   for f in "${EXPECTED[@]}"; do [[ -f "$SMOKE_DIR/$f" ]] || missing=$((missing + 1)); done
   if [[ "$missing" -eq 0 ]]; then SMOKE_OK=1; break; fi

@@ -22,7 +22,7 @@ See `proposal.md` for motivation. `SKILL.md` is the run-time source of truth; 18
 - **`--target <dir>` resolves relative to the invocation directory**; absolute paths pass through. Documented in one Phase 0 line rather than repeated per mode — mode sections say "the active target", defined once.
 - **Version bump to 3.0.0.** The path move, the `--resume` signature change, and the `--list` semantics change are all user-visible breaking changes; semver-major names that honestly. A minor bump would hide them.
 - **Doc rewrites follow the `writing-for-agents` skill:** the Phase 0 router gains a `--target` branch with one trigger phrase each; the "I am creating it" narration is reworded positively for `research/`; each mode section keeps its completion criteria as-is (they are path-agnostic); duplicate path spellings in prose collapse to the tree in §Generated files as the single source.
-- **`verify.sh` checks `$WORKDIR/research` directly** (`EXPECTED` files resolved under it, `find` replaced by a plain test). The smoke prompt pins a fresh temp WORKDIR, so the occupied-target branch never fires there; a second smoke variant is unnecessary.
+- **`verify.sh` checks `$WORKDIR/research` directly** (`EXPECTED` files resolved under it, `find` replaced by a plain test). The smoke prompt pins a fresh temp WORKDIR, so on the first attempt the occupied-target branch cannot fire; on a retry after a partial run it may, where the prompt's no-questions directive pushes the agent to continue the existing workspace — the 3-attempt loop tolerates either outcome.
 
 ## Risks / Trade-offs
 

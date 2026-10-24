@@ -3,7 +3,7 @@ name: recursive-research
 description: Deep recursive research to PhD level on any topic. Use when you want to go deep on a topic to expert level, understand a new field to make informed decisions, prepare a technical document, paper, or proposal, or map the state of the art and its knowledge gaps. Runs self-regulating research cycles with source tiering, WDM + Munger inversion, and disk checkpoints that survive context compaction.
 license: MIT
 metadata:
-  version: "2.2.0"
+  version: "3.0.0"
   author: "Joseph Huayhualla (@Anjos2); opencode port"
   repository: "https://github.com/Anjos2/recursive-research"
   opencode/slash: "false"
@@ -28,11 +28,12 @@ Self-regulated research that iterates until it reaches **PhD level** on a resear
 
 ### Phase 0 — Invocation handling, then initial questions (the skill asks)
 
-Read the invocation text — the user's message that triggered this skill, e.g. `/recursive-research --resume <slug>` — for a flag, **before doing anything else**:
+Read the invocation text — the user's message that triggered this skill, e.g. `/recursive-research --target docs/deep-dive` — for flags, **before doing anything else**:
 
-- **`--resume <slug>` present** → go straight to **`--resume` mode** and stop. The slug names the run: never enumerate runs or ask which one. If the slug is missing or matches no run, say so and show the available runs.
+- **Active target** — `--target <dir>` names the directory the run lives in; relative paths resolve against the invocation directory. Without `--target` the active target is `research/` in the invocation directory. This is the one definition of the path; every mode below acts on the active target alone.
+- **`--resume` present** → go straight to **`--resume` mode** and stop. The path names the run: never enumerate runs or ask which one.
 - **`--list` present** → go straight to **`--list` mode** and stop.
-- **Neither present** → continue Phase 0. If `memory/research/` already holds runs, offer **resume / list / new** before asking the seed question.
+- **Neither present** → continue Phase 0. If the active target already holds a run (`state.md` present), offer **resume / list / new** before asking the seed question.
 
 Then the skill asks the user, in order:
 
@@ -50,12 +51,13 @@ The skill presents a summary and waits for confirmation before starting.
 
 ### Phase 1 — Workspace preparation
 
-1. Generate a `slug` from the seed (kebab-case, max. 40 characters)
-2. Verify / create `memory/research/<slug>/` in the current working directory
-   - **If `memory/` does NOT exist, create it**, explaining: *"The `memory/` folder does not exist in the project. I am creating it because the skill needs to consolidate findings to disk each cycle — that is what lets a run resume in a new session."*
-3. Create the initial files (see §Generated files for the full layout and what each holds):
+1. Generate a `slug` from the seed (kebab-case, max. 40 characters). The slug is run metadata for `state.md`, the fixture registry, and the messages — the active target identifies the run.
+2. Occupied target: if `state.md` exists in the active target, report the occupant (seed, status, last modified) and offer **resume**, **overwrite** (delete the workspace), or a different `--target`. No occupant file is deleted or overwritten before the user chooses.
+3. Verify / create the active target
+   - **If it does NOT exist, create it**, explaining — naming the active target itself, e.g. *"The `research/` folder does not exist in the project. I am creating it because the skill needs to consolidate findings to disk each cycle — that is what lets a run resume in a new session."*
+4. Create the initial files (see §Generated files for the full layout and what each holds):
    `state.md`, `threads.md`, `findings.md`, `sources-tier-1.md`, `sources-tier-2.md`, `sources-tier-3.md`, `sources-rejected.md`
-4. Create the fixture store (see §Fixture registry):
+5. Create the fixture store (see §Fixture registry):
    `fixtures/registry.schema.json` (the committed schema), `fixtures/registry.json` (with an empty `fixtures` array), and `fixtures/.gitignore` (nested — never the project-root `.gitignore`).
 
 ---
@@ -107,7 +109,7 @@ Before the first cycle, detect which research capabilities the environment expos
 
 Real-browser / JS-rendering MCPs are deprioritized: use them only when the content genuinely requires explicit JS execution (SPAs without SSR, content behind auth). AI-optimized scrapers are 10-50× faster than real browsers and return already-structured text.
 
-**Raw capture (fixtures).** Persist each selected source as a *fixture* under `memory/research/<slug>/fixtures/` and index it in `fixtures/registry.json` (see §Fixture registry). Capture at the fetch that produced the content; if the tool is absent or the fetch fails, record a `pointer-only` fixture (URL + metadata, no bytes) — never silently skip.
+**Raw capture (fixtures).** Persist each selected source as a *fixture* under `fixtures/` in the active target and index it in `fixtures/registry.json` (see §Fixture registry). Capture at the fetch that produced the content; if the tool is absent or the fetch fails, record a `pointer-only` fixture (URL + metadata, no bytes) — never silently skip.
 
 - **Webpage** → `ketch scrape --raw --json <url>` yields `markdown`, `raw_html`, and `source` in one fetch; write `page.md` + `raw.html`.
 - **Search-result set** → `ketch search --json` (default pass, merged with the multi pass when it ran); write `results.json`.
@@ -207,7 +209,7 @@ Every source consulted is recorded in the matching tier file with: title, URL, a
 
 #### 5.5. Consolidate the checkpoint
 
-Save at the end of the cycle: `memory/research/<slug>/cycle-N.md` with:
+Save at the end of the cycle: `cycle-N.md` in the active target with:
 - Thread worked on
 - Sources consulted (with tier)
 - New findings
@@ -259,10 +261,10 @@ Reason: I am approaching the context limit. If I continue, I may lose coherence
 when the session is compacted.
 
 The research is saved in:
-  memory/research/<slug>/
+  <active target>/
 
 To resume in a new session:
-  /recursive-research --resume <slug>
+  /recursive-research --resume [--target <dir>]
 
 Pause here, or continue for 1-2 more cycles? (continue / pause)
 ```
@@ -324,12 +326,11 @@ What do you prefer?
 
 ## `--resume` mode
 
-Invocation: `/recursive-research --resume <slug>` — `<slug>` is the run's folder name under `memory/research/`.
+Invocation: `/recursive-research --resume [--target <dir>]` — the active target identifies the run.
 
-1. Look for `memory/research/<slug>/`
-2. If no exact folder matches, look for a run whose slug or seed matches `<slug>` case-insensitively before giving up.
-3. If still nothing matches → say clearly that no run matches `<slug>`, list the available runs, and stop. Do not silently fall back to the resume/list/new menu.
-4. If it exists:
+1. Look for `state.md` in the active target.
+2. If it is absent → say clearly that no run exists at that path, and stop. Search no other directory and do not silently fall back to the resume/list/new menu.
+3. If it exists:
    - Read `state.md` → rebuild the metrics (coverage, saturation, counters)
    - Read the latest `cycle-N.md` → recent context
    - Read `threads.md` → current tree
@@ -338,17 +339,19 @@ Invocation: `/recursive-research --resume <slug>` — `<slug>` is the run's fold
    - **If `registry.json` is missing** but `fixtures/` exists, rebuild it by scanning `fixtures/<kind>/<id>/` and synthesising minimal entries (`id`/`kind`/`local_path` from the directory names, `notes: "reconstructed"`). **If it is corrupt**, stop, tell the user, and offer the same rebuild.
    - Verify fixture bytes **lazily** — only when a fixture is actually referenced. If a `captured` fixture's file is absent, downgrade it to `pointer-only`, note the absence, and offer re-capture on demand.
    - Present: "Resuming from cycle N. Next step: [thread X]. Continue?"
-5. Continue the loop from Phase 5. Before capturing any source, look up its `id` in `fixtures/registry.json`; if present, reuse it and skip the fetch unless freshness was requested (`--no-cache`).
-6. If the run then closes (natural / forced / partial), Phase 6 **regenerates `report.md` from scratch** (overwrite). A mid-run resume never creates one.
+4. Continue the loop from Phase 5. Before capturing any source, look up its `id` in `fixtures/registry.json`; if present, reuse it and skip the fetch unless freshness was requested (`--no-cache`).
+5. If the run then closes (natural / forced / partial), Phase 6 **regenerates `report.md` from scratch** (overwrite). A mid-run resume never creates one.
 
 ---
 
 ## `--list` mode
 
-Invocation: `/recursive-research --list`
+Invocation: `/recursive-research --list [--target <dir>]`
 
-List every run saved under `memory/research/` in the current project:
+Summarize the single run at the active target:
 - Slug · Seed · Cycles completed · Status (open / closed) · Last modified · Fixtures (count) · Report (yes / no)
+
+Empty target → report "no run at <target>" in one line. Closed run → offer to start a new one, which routes through the occupied-target prompt.
 
 ---
 
@@ -372,7 +375,7 @@ Hold every cycle, and the closure, to these targets:
 ## Generated files
 
 ```
-memory/research/<slug>/
+<active target>/           ← research/ by default, or the --target directory
 ├── state.md               ← progress, metrics, metadata
 ├── threads.md             ← thread and sub-thread tree with status
 ├── sources-tier-1.md      ← most reliable sources consulted
@@ -470,14 +473,14 @@ User: 25
 Skill: Confirmed. Seed: "episodic memory in humans" · Mode: mixed · Local: [C:/Dropbox/neuroscience-papers]
        Prioritize: [Tulving, Maguire] · Cap: 25 cycles
 
-       The `memory/` folder does not exist. I am creating it — it is needed
+        The `research/` folder does not exist. I am creating it — it is needed
        to consolidate each cycle to disk.
 
        Applying WDM + Munger to identify seed threads... Selected 5:
        neuroanatomical foundations · phenomenology and taxonomy · disorders
        and dissociations · computational models · contemporary cognitive neuroscience
 
-       Path: memory/research/episodic-memory-in-humans/
+       Path: research/
        Starting cycle 1 (lowest-coverage thread: 1)...
 ```
 
