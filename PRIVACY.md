@@ -2,7 +2,7 @@
 
 **Skill:** recursive-research (opencode port)
 **Upstream author:** Joseph Huayhualla ([@Anjos2](https://github.com/Anjos2))
-**Last updated:** September 2026
+**Last updated:** October 2026
 
 ## TL;DR
 
@@ -16,8 +16,8 @@ It **does** save the third-party content it fetches (web pages, documents, media
 
 - Reads local files **you explicitly provide** when you select `local` or `mixed` mode
 - Performs web searches using **ketch** (MCP or CLI) when available, and/or tools already configured in your agent
-- Writes research checkpoints and artifacts to a local `memory/research/` folder inside your working project
-- Persists the raw content it fetches (web pages, search-result sets, documents, media, and git clones) as **fixtures** under `memory/research/<slug>/fixtures/`, indexed by `fixtures/registry.json`
+- Writes research checkpoints and artifacts to a local `research/` workspace inside your working project (or the directory you name with `--target`)
+- Persists the raw content it fetches (web pages, search-result sets, documents, media, and git clones) as **fixtures** under the workspace's `fixtures/`, indexed by `fixtures/registry.json`
 - Operates entirely on your machine — no requests are sent to any server controlled by the skill authors
 
 ## What the skill does NOT do
@@ -44,7 +44,7 @@ The skill does not modify, proxy, or intercept those requests. It does persist t
 
 ## Local data
 
-All research outputs (`memory/research/<slug>/*.md`) live on your machine, inside your project directory. You are responsible for how you store, back up, share, or delete them. The skill authors have no access to them.
+All research outputs (`research/*.md` — or your `--target` directory) live on your machine, inside your project directory. You are responsible for how you store, back up, share, or delete them. The skill authors have no access to them.
 
 The `fixtures/` folder holds **verbatim copies of third-party content** (web pages, documents, media, cloned repositories) that the skill fetched on your behalf. This content may be copyrighted or sensitive; it stays on your disk and is never uploaded by the skill. Text fixtures are intended to be tracked by git; binaries above a size threshold are gitignored by a nested `fixtures/.gitignore`, and git clones are always ignored. See `SKILL.md` for the `git-lfs` opt-in, which the skill asks about explicitly and never enables without your agreement.
 
@@ -65,7 +65,7 @@ rm -rf .agents/skills/recursive-research
 npx skills remove recursive-research
 
 # Remove research outputs (per project)
-rm -rf <your-project>/memory/research
+rm -rf <your-project>/research
 ```
 
 ---

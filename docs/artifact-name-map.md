@@ -4,8 +4,8 @@ The port renames every generated artifact to English. Directory and filenames in
 
 | Upstream (Spanish) | Port (English) |
 | --- | --- |
-| `memoria/` | `memory/` |
-| `memoria/investigaciones/<slug>/` | `memory/research/<slug>/` |
+| `memoria/` | — (retired; the workspace sits directly in `research/`) |
+| `memoria/investigaciones/<slug>/` | `research/` (default target; `--target` replaces it) |
 | `estado.md` | `state.md` |
 | `hilos.md` | `threads.md` |
 | `hallazgos.md` | `findings.md` |
@@ -18,4 +18,4 @@ The port renames every generated artifact to English. Directory and filenames in
 | `acciones.md` | `actions.md` |
 | `gaps.md` | `gaps.md` |
 
-`<slug>` is the kebab-case slug of the research seed (max 40 characters), unchanged from upstream.
+`<slug>` is the kebab-case slug of the research seed (max 40 characters), unchanged from upstream. From v3 it is run metadata only — recorded in `state.md` and the fixture registry — and the `<slug>` path segment is retired: the workspace directory identifies the run.
