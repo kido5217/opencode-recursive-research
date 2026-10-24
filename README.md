@@ -62,7 +62,7 @@ mkdir -p .agents/skills/recursive-research
 cp opencode-recursive-research/skills/recursive-research/SKILL.md .agents/skills/recursive-research/
 ```
 
-Invoke with `/recursive-research`, or let it auto-trigger from its description.
+Mention `@recursive-research` in a message (with or without flags), or describe the topic and the skill auto-triggers from its description — the skill reads flags from the message that invoked it.
 
 ---
 
@@ -77,7 +77,7 @@ Invoke with `/recursive-research`, or let it auto-trigger from its description.
 
 The skill guides you interactively. Answer in natural language. The workspace is `research/` in the directory you invoke from; `--target <dir>` replaces it and the path identifies the run (the kebab-case topic slug — e.g. `episodic-memory-in-humans` — lives in `state.md`, not in the path).
 
-On opencode v2 the skill is deliberately **not** registered as a slash command (`metadata.opencode/slash: false` in the frontmatter). v2's skill-command path drops the trailing arguments, so a slash-invoked `/recursive-research --target docs/deep` would lose the flag and fall back to the default workspace. Typing the line as a normal message — or letting the description auto-trigger the skill — keeps the arguments, exactly as on opencode v1.
+On opencode v2 skills are not registered as slash commands, so the lines above are plain text, not command invocations. Mention `@recursive-research` in a message or let the description auto-trigger the skill — the skill reads its flags (`--target`, `--resume`, `--list`) verbatim from the message text that invoked it. (`opencode run` delivers such a line with its flags intact, observed on 2.1.4.)
 
 ### Usage examples by domain
 
