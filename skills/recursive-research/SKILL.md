@@ -3,10 +3,9 @@ name: recursive-research
 description: Deep recursive research to PhD level on any topic. Use when you want to go deep on a topic to expert level, understand a new field to make informed decisions, prepare a technical document, paper, or proposal, or map the state of the art and its knowledge gaps. Runs self-regulating research cycles with source tiering, WDM + Munger inversion, and disk checkpoints that survive context compaction.
 license: MIT
 metadata:
-  version: "3.0.0"
+  version: "3.0.1"
   author: "Joseph Huayhualla (@Anjos2); opencode port"
   repository: "https://github.com/Anjos2/recursive-research"
-  opencode/slash: "false"
 ---
 
 # Skill: Deep Recursive Research
